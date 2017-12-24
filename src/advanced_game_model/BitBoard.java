@@ -35,10 +35,10 @@ public class BitBoard {
 
      */
 
-    static final int MAX_X = 5;
-    static final int MAX_Y = 5;
+    private static final int MAX_X = 5; // TODO -- put in interface
+    private static final int MAX_Y = 5;
 
-    static final int TERRITORIES = MAX_X * MAX_Y;
+    private static final int TERRITORIES = MAX_X * MAX_Y;
 
     private final BitSet redRing0Board;
     private final BitSet yelRing0Board;

@@ -43,7 +43,7 @@ public class Move {
 
     @Override
     public String toString() {
-        return "Move{" +
+        return "MoveSuggestion{" +
                 "x=" + x +
                 ", y=" + y +
                 ", pieces=" + piece +

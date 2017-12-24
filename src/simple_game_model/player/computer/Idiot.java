@@ -1,8 +1,9 @@
-package simple_game_model.player;
+package simple_game_model.player.computer;
 
 import simple_game_model.Move;
 import simple_game_model.Observation;
 import simple_game_model.pieces.Piece;
+import simple_game_model.player.Player;
 import simple_game_model.player.input.MoveInput;
 import simple_game_model.player.input.PlayerInput;
 

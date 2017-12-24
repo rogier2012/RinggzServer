@@ -1,7 +1,7 @@
 package simple_game_model;
 
-import simple_game_model.player.HumanPlayer;
-import simple_game_model.player.Idiot;
+import simple_game_model.player.human.HumanPlayer;
+import simple_game_model.player.computer.Idiot;
 import simple_game_model.player.Player;
 
 public class PlayTest {

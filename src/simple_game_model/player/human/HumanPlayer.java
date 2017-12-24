@@ -1,4 +1,4 @@
-package simple_game_model.player;
+package simple_game_model.player.human;
 
 import simple_game_model.Color;
 import simple_game_model.Move;
@@ -6,6 +6,7 @@ import simple_game_model.Observation;
 import simple_game_model.pieces.Base;
 import simple_game_model.pieces.Piece;
 import simple_game_model.pieces.Ring;
+import simple_game_model.player.Player;
 import simple_game_model.player.input.MoveInput;
 import simple_game_model.player.input.PlayerInput;
 
@@ -20,7 +21,7 @@ import static simple_game_model.Territory.SIZES;
 
 public class HumanPlayer extends Player {
 
-    /** Move input consist of two numbers, seperated by a space */
+    /** MoveSuggestion input consist of two numbers, seperated by a space */
     private static final String MOVE_INPUT_FORMAT = String.format("[0-%s] [0-%s] [A-Z][A-Z][0-%s]?", Integer.toString(MAX_X - 1), Integer.toString(MAX_Y - 1), Integer.toString(SIZES - 1));
     /** Compiled version of the input regex */
     private static final Pattern MOVE_INPUT_REGEX = Pattern.compile(MOVE_INPUT_FORMAT);

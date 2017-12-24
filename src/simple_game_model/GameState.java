@@ -90,7 +90,7 @@ class GameState {
     /**
      * @return a readable String representation of this game state
      */
-    String prpr() { // TODO -- better
+    String prpr() { // TODO -- better & move to Observation & show only in humanplayer
         StringBuilder sb = new StringBuilder();
         final String TERRITORY   = " %s, %s, %s, %s |";
         final String B_TERRITORY = "        %s      |";
