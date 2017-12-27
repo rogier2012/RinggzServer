@@ -92,6 +92,8 @@ public class BitBoard {
         this.hash = 0;
     }
 
+    // TODO -- merge base bitsets into ring bitsets??
+
     void putPiece(Piece piece, int x, int y) { // TODO
         if (piece instanceof Ring) {
             BitSet board = getRingBoard(piece.getColor(), ((Ring) piece).getSize());

@@ -1,6 +1,6 @@
 package simple_game_model.player.input;
 
-import simple_game_model.Move;
+import simple_game_model.moves.Move;
 
 public class MoveInput extends PlayerInput {
 

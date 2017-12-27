@@ -146,6 +146,15 @@ public class Board {
         }
     }
 
+    /**
+     * Reset one territory
+     * @param x -- The x coordinate of the territory
+     * @param y -- The y coordinate of the territory
+     */
+    void reset(int x, int y) {
+        this.grid[x][y].reset();
+    }
+
     /*
         Exceptions
      */

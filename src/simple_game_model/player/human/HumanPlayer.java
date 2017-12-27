@@ -1,8 +1,10 @@
 package simple_game_model.player.human;
 
 import simple_game_model.Color;
-import simple_game_model.Move;
+import simple_game_model.moves.Move;
 import simple_game_model.Observation;
+import simple_game_model.moves.NormalMove;
+import simple_game_model.moves.StartMove;
 import simple_game_model.pieces.Base;
 import simple_game_model.pieces.Piece;
 import simple_game_model.pieces.Ring;
@@ -19,7 +21,7 @@ import static simple_game_model.Board.MAX_X;
 import static simple_game_model.Board.MAX_Y;
 import static simple_game_model.Territory.SIZES;
 
-public class HumanPlayer extends Player {
+public class HumanPlayer extends Player { // TODO -- properly
 
     /** MoveSuggestion input consist of two numbers, seperated by a space */
     private static final String MOVE_INPUT_FORMAT = String.format("[0-%s] [0-%s] [A-Z][A-Z][0-%s]?", Integer.toString(MAX_X - 1), Integer.toString(MAX_Y - 1), Integer.toString(SIZES - 1));
@@ -46,6 +48,7 @@ public class HumanPlayer extends Player {
     public PlayerInput decide(Observation observation) {
         PlayerInput result;
         // Ask the player for input
+        System.out.println(observation.prpr());
         System.out.println(this.getName() + ", " + MOVE_REQUEST);
         Scanner scanner = new Scanner(INPUT_SOURCE);
         do {
@@ -73,8 +76,7 @@ public class HumanPlayer extends Player {
                         c = Color.GREEN;
                         break;
                     case 'S':
-                        c = Color.START;
-                        break;
+                        return new MoveInput(new StartMove(x, y));
                     default:
                         c = null;
                 }
@@ -97,7 +99,7 @@ public class HumanPlayer extends Player {
                         }
                     }
                 }
-                Move move = new Move(x, y, piece);
+                Move move = new NormalMove(x, y, piece);
                 System.out.println(move);
                 result = new MoveInput(move);
                 break;

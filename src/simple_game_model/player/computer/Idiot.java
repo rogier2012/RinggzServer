@@ -1,7 +1,7 @@
 package simple_game_model.player.computer;
 
-import simple_game_model.Move;
 import simple_game_model.Observation;
+import simple_game_model.moves.NormalMove;
 import simple_game_model.pieces.Piece;
 import simple_game_model.player.Player;
 import simple_game_model.player.input.MoveInput;
@@ -42,7 +42,7 @@ public class Idiot extends Player {
         int x = XS[r.nextInt(XS.length)];
         int y = YS[r.nextInt(YS.length)];
         Piece piece = this.getPieceSet().getPieces().get(r.nextInt(this.getPieceSet().getPieces().size()));
-        return new MoveInput(new Move(x, y, piece));
+        return new MoveInput(new NormalMove(x, y, piece));
     }
 
     @Override

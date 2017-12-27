@@ -1,12 +1,15 @@
 package simple_game_model;
 
+import simple_game_model.moves.Move;
+import simple_game_model.moves.NormalMove;
+import simple_game_model.moves.StartMove;
 import simple_game_model.pieces.Base;
 import simple_game_model.pieces.Piece;
 import simple_game_model.pieces.Ring;
-import simple_game_model.pieces.StartBase;
 import simple_game_model.player.Player;
 import simple_game_model.player.input.MoveInput;
 import simple_game_model.player.input.PlayerInput;
+import simple_game_model.player.input.StartInput;
 
 import java.util.*;
 
@@ -65,12 +68,12 @@ public class Game {
     private final Map<Player, List<Piece>> playerPieces;
     /** Index of the player who has to make a move */
     private int currentPlayer;
-    /** Reference to start pieces */
-    private final StartBase start;
     /** For each player maps the set of usable colors for that player */
     private final Map<Player, Set<Color>> playerColors;
     /** Maps each color to which player can use it to score points */
     private final Map<Color, Player> scoreColors;
+    /** A map that stores for each player whether they were able to move (stopping criterion of game) */
+    private final Map<Player, Boolean> ableToMove;
 
     /*
         Constructors
@@ -176,11 +179,10 @@ public class Game {
             p.setPieces(new PieceSet(this.playerPieces.get(p)));
         }
 
-        // Keep a reference to the start pieces
-        this.start = new StartBase();
-        // Give it to the first player
-        this.playerPieces.get(this.players[this.currentPlayer]).add(this.start);
-
+        this.ableToMove = new HashMap<>();
+        for (Player p : players) {
+            ableToMove.put(p, true);
+        }
     }
 
     /*
@@ -192,83 +194,73 @@ public class Game {
      * @return each player's score
      */
     public Map<Player, Integer> play()  {
-        // Keep a boolean for each player whether they are able to make a move (stopping criterion for game)
-        Map<Player, Boolean> ableToMove = new HashMap<>();
-        for (Player p : players) {
-            ableToMove.put(p, true);
-        }
         // Start taking turns
-        while (true) {
-            // Obtain the player that has to make a move
+        while (continueGame()) {
+            // Obtain the player that has to make a move and the waiting players
             Player player = currentPlayer();
             // Compute the possible moves for this player
-            Map<Color, List<Move>> possibleMovesPerColor = possibleMoves(player);
-            List<Move> possibleMoves = new ArrayList<>();
-            for (Color playerColor : possibleMovesPerColor.keySet())  {
-                possibleMoves.addAll(possibleMovesPerColor.get(playerColor));
-            }
+            List<Move> possibleMoves = possibleMoves(player);
+            // Check whether the current player can move and update stopping criterion
+            boolean playerCanMove = possibleMoves.size() > 0;
+            ableToMove.put(player, playerCanMove);
+            // If the player is able to move, continue
+            if (playerCanMove) {
+                // Ask the current player what should be done this turn
+                PlayerInput input = askPlayerInput();
+                // Execute the current player's decision
+                if (input instanceof MoveInput) {
+                    Move move = ((MoveInput) input).getMove();
+                    if (possibleMoves.contains(move)) {
+                        try {
+                            this.state.doMove(move);
 
-            System.out.println(state.prpr());
+                            System.out.printf("Performed %s\n", move);
 
-//            System.out.println("Possible moves:");
-//            System.out.println(possibleMoves);
-
-            // Check whether at least one player can still make moves. If not, end the game
-            ableToMove.put(player, possibleMoves.size() > 0);
-            boolean proceedGame = false;
-            for (Player p : ableToMove.keySet()) {
-                proceedGame |= ableToMove.get(p);
-            }
-            if (!proceedGame) {
-                // The game ended. Count scores
-                Map<Player, Integer> scores = this.scores();
-                System.out.println("The game ended. Score:");
-                for (Player p : this.players) {
-                    System.out.printf("%s: %d\n", p.getName(), scores.get(p));
-                }
-                System.out.println(playerPieces);
-                return scores; // TODO -- properly handle end of game
-            }
-            // If the current player can't move, skip to the next one
-            if (!ableToMove.get(player)) {
-                this.nextPlayer();
-                continue;
-            }
-            // The game continues. Let the players observe the game state and let one take a turn
-            Observation observation =  new Observation(this.state);
-            // Ask the current player what should be done in this turn
-            PlayerInput input = player.decide(observation);
-            // Let the other players observe the current game state (before executing the current player's decision)
-            for (Player p : players) {
-                if (p != player) {
-                    p.observe(observation); // TODO -- new observation for each player
-                }
-            }
-            // Execute the current player's decision
-            if (input instanceof MoveInput) {
-                Move move = ((MoveInput) input).getMove();
-                if (possibleMoves.contains(move)) {
-                    try {
-                        this.state.doMove(move);
-
-                        System.out.printf("Performed %s\n", move);
-
-                    } catch (GameState.InvalidMoveException e) {
+                        } catch (GameState.InvalidMoveException e) {
+                            continue;
+                        }
+                        if (move instanceof NormalMove) {
+                            this.playerPieces.get(player).remove(((NormalMove) move).getPiece());
+                        }
+                    } else {
+                        System.out.println(String.format("Player %s tried to do an invalid move!", player.getName()));
                         continue;
                     }
-                    this.playerPieces.get(player).remove(move.getPiece());
-                } else {
-                    System.out.println(String.format("Player %s tried to do an invalid move!", player.getName()));
-                    continue;
-                }
-            } else {
-                // TODO -- other inputs
+                } else if(input instanceof StartInput) {
 
+                } else {
+                    // TODO -- other inputs
+
+                }
             }
+
             // Switch to the next player
             this.nextPlayer();
         }
 
+        // The game ended. Count scores
+        Map<Player, Integer> scores = this.scores();
+        System.out.println("The game ended. Score:");
+        for (Player p : this.players) {
+            System.out.printf("%s: %d\n", p.getName(), scores.get(p));
+        }
+        return scores; // TODO -- properly handle end of game
+    }
+
+    /**
+     * Helper function asking the current player for input and showing the game state to all players TODO -- observation instance in all players
+     * @return the player's decision
+     */
+    private PlayerInput askPlayerInput() {
+        // Let the players observe the game state and let one take a turn
+        Observation observation = new Observation(this.state);
+        // Ask the current player what should be done in this turn
+        PlayerInput input = currentPlayer().decide(observation);
+        // Let the other players observe the current game state
+        for (Player waiting : waitingPlayers())   {
+            waiting.observe(observation);
+        }
+        return input;
     }
 
     /**
@@ -276,27 +268,19 @@ public class Game {
      * @param player -- The player for which the moves should be computed
      * @return lists of possible moves, grouped by color
      */
-    private Map<Color, List<Move>> possibleMoves(Player player) {
+    private List<Move> possibleMoves(Player player) {
         // Initialize result array
-        Map<Color, List<Move>> moveMap = new HashMap<>();
-        // Obtain the colors relevant to this player. Initialize lists to store moves
-        Set<Color> colors = getColorsOf(player);
-        for (Color c : colors) {
-            moveMap.put(c, new ArrayList<>());
-        }
+        List<Move> moves = new ArrayList<>();
 
         // Check if start move has been done. If not, return with all possible start moves
         if (state.getMoves().size() == 0)   {
-            List<Move> moves = new ArrayList<>();
             for (int x = MIN_START_X; x <= MAX_START_X; x++)    {
                 for (int y = MIN_START_Y; y <= MAX_START_Y; y++) {
-                    moves.add(new Move(x, y, this.start));
+                    moves.add(new StartMove(x, y));
                 }
             }
-            moveMap.put(Color.START, moves);
-            return moveMap;
+            return moves;
         }
-
         // Compute possible moves on each territory
         for (int x = 0; x < MAX_X; x++) {
             for (int y = 0; y < MAX_Y; y++) {
@@ -317,60 +301,31 @@ public class Game {
                             // If there is no pieces, skip
                             if (nbh_piece == null) continue;
                             Color nbh_color = nbh_piece.getColor();
-                            // Check if the color is relevant to this player. If not, check if it is the start color. Else skip it
-                            if (!colors.contains(nbh_color)) {
-                                if (!(nbh_color == Color.START)) {
-                                    continue;
-                                }
-                            }
+                            // Check if the color is relevant to this player. If not, skip it
+                            if (!getColorsOf(player).contains(nbh_color)) continue;
                             // Check where rings can be placed and keep a boolean for when a base can be placed as well
                             boolean isEmpty = true;
                             for (int size = 0; size < SIZES; size++) {
                                 // Check if the spot is empty
                                 if (pieces[size] == null) {
                                     // Check if the player has the required pieces
-
-                                    if (nbh_color == Color.START) { // TODO -- properly
-                                        for (Color c : colors) {
-                                            Ring ring = obtainRingFrom(player, c, size);
-                                            if (ring != null) {
-                                                // All requirements met. Add move
-                                                Move move = new Move(x, y, ring);
-                                                moveMap.get(c).add(move);
-                                            }
-                                        }
-                                    } else {
-                                        Ring ring = obtainRingFrom(player, nbh_color, size);
-                                        if (ring != null) {
-                                            // All requirements met. Add move
-                                            Move move = new Move(x, y, ring);
-                                            moveMap.get(nbh_color).add(move);
-                                        }
+                                    Ring ring = obtainRingFrom(player, nbh_color, size);
+                                    if (ring != null) {
+                                        // All requirements met. Add move
+                                        Move move = new NormalMove(x, y, ring);
+                                        moves.add(move);
                                     }
-
-
                                 } else {
                                     isEmpty = false;
                                 }
                             }
                             if (isEmpty) {
                                 // Check if the player has the required pieces
-                                if (nbh_color == Color.START) { // TODO -- proper
-                                    for (Color c : colors) {
-                                        Base base = obtainBaseFrom(player, c);
-                                        if (base != null) {
-                                            // All requirements met. Add move
-                                            Move move = new Move(x, y, base);
-                                            moveMap.get(c).add(move);
-                                        }
-                                    }
-                                } else {
-                                    Base base = obtainBaseFrom(player, nbh_color);
-                                    if (base != null) {
-                                        // All requirements met. Add move
-                                        Move move = new Move(x, y, base);
-                                        moveMap.get(nbh_color).add(move);
-                                    }
+                                Base base = obtainBaseFrom(player, nbh_color);
+                                if (base != null) {
+                                    // All requirements met. Add move
+                                    Move move = new NormalMove(x, y, base);
+                                    moves.add(move);
                                 }
                             }
                         }
@@ -378,7 +333,18 @@ public class Game {
                 }
             }
         }
-        return moveMap;
+        return moves;
+    }
+
+    /**
+     * @return whether the game should continue
+     */
+    private boolean continueGame() {
+        boolean continueGame = false;
+        for (Player p : ableToMove.keySet()) {
+            continueGame |= ableToMove.get(p);
+        }
+        return continueGame;
     }
 
     /**
@@ -500,6 +466,21 @@ public class Game {
      */
     private Player currentPlayer()  {
         return this.players[this.currentPlayer];
+    }
+
+    /**
+     * @return the players that are waiting for their turn
+     */
+    private Player[] waitingPlayers() {
+        Player[] players = new Player[this.numberOfPlayers - 1];
+        int i = 0;
+        for (int j = 0; j < this.numberOfPlayers; j++) {
+            if (j != this.currentPlayer) {
+                players[i] = this.players[j];
+                i++;
+            }
+        }
+        return players;
     }
 
     /**

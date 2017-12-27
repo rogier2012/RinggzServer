@@ -1,7 +1,7 @@
 //package barry;
 //
 //import advanced_game_model.Color;
-//import simple_game_model.Move;
+//import simple_game_model.moves.Move;
 //import simple_game_model.Observation;
 //import simple_game_model.player.computer.strategy.Strategy;
 //

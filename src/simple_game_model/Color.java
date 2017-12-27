@@ -2,6 +2,6 @@ package simple_game_model;
 
 public enum Color {
 
-    RED, YELLOW, GREEN, BLUE, START
+    RED, YELLOW, GREEN, BLUE
 
 }

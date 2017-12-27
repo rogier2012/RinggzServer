@@ -1,6 +1,6 @@
 package simple_game_model.player.computer.strategy;
 
-import simple_game_model.Move;
+import simple_game_model.moves.Move;
 import simple_game_model.Observation;
 
 public interface Strategy {
