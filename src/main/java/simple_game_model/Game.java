@@ -254,6 +254,7 @@ public class Game {
     private PlayerInput askPlayerInput() {
         // Let the players observe the game state and let one take a turn
         Observation observation = new Observation(this.state);
+        System.out.println(observation.getMoves().size() > 60);
         // Ask the current player what should be done in this turn
         PlayerInput input = currentPlayer().decide(observation);
         // Let the other players observe the current game state
@@ -487,9 +488,9 @@ public class Game {
      * Switch to the next player
      * @return - The player whose turn it is after switching
      */
-    private Player nextPlayer() {
+    private void nextPlayer() {
         this.currentPlayer = (this.currentPlayer + 1) % this.numberOfPlayers;
-        return currentPlayer();
+//        return currentPlayer();
     }
 
     /*

@@ -115,4 +115,9 @@ public class HumanPlayer extends Player { // TODO -- properly
     public void observe(Observation observation) {
 
     }
+
+    @Override
+    public void sendMessage(String message) {
+        System.out.println(message);
+    }
 }

@@ -32,9 +32,17 @@ public abstract class Player {
      */
     public abstract void observe(Observation observation);
 
+    /**
+     * The game can send messages
+     * @param message Message from the game
+     */
+    public abstract void sendMessage(String message);
+
     /*
         Getters and Setters
      */
+
+
 
     public String getName() {
         return name;
@@ -49,4 +57,9 @@ public abstract class Player {
         this.pieces = pieces;
     }
 
+
+    @Override
+    public String toString() {
+        return this.getClass().getSimpleName() + ": " + this.getName();
+    }
 }
